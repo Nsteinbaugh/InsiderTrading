@@ -16,7 +16,7 @@ public class SECApiService {
     public HttpResponse<String> getLatest10Q() throws URISyntaxException, IOException, InterruptedException {
 
         String requestBody = "{ \"query\": {\"query_string\": " +
-                "{\"query\": \"formType:\"10-Q\"\"}}, " +
+                "{\"query\": \"formType:'10-Q'\"}}, " +
                 "\"from\": \"0\"," +
                 "\"size\": \"10\"," +
                 "\"sort\": [ { \"filedAt\": { \"order\": \"desc\"}}]}";
@@ -25,7 +25,7 @@ public class SECApiService {
                 .uri(new URI(baseUrl))
                 .header("Content-Type", "application/json")
                 .header("Authorization", apiKey)
-                .POST(HttpRequest.BodyPublishers.noBody())
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
 
         HttpResponse<String> response = HttpClient.newBuilder()
