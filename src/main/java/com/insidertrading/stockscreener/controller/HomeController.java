@@ -14,7 +14,7 @@ public class HomeController {
     @GetMapping("/")
     public String index(Model model) throws URISyntaxException, IOException, InterruptedException {
         SECApi secApi = new SECApi();
-        model.addAttribute("latest10q", secApi.getLatest10Q().body());
+        model.addAttribute("latest10Q", secApi.getLatest10Q());
         return "index";
     }
 }

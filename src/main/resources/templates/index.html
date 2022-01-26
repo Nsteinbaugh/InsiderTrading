@@ -6,6 +6,12 @@
     <title>Title</title>
 </head>
 <body>
-<p th:text="${latest10q}">Test</p>
+<tr th:each="filing: ${latest10Q.filings}">
+    <td th:text="${filing.ticker}" />
+    <td th:text="${filing.companyName}" />
+    <td th:text="${filing.formType}" />
+    <td th:text="${filing.description}" />
+    <td th:text="${filing.entities}" />
+</tr>
 </body>
 </html>

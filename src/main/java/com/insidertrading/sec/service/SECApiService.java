@@ -1,5 +1,11 @@
 package com.insidertrading.sec.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.insidertrading.sec.response.Form4Response;
+import com.insidertrading.sec.response.Latest10QResponse;
+
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,24 +19,54 @@ public class SECApiService {
 
     private static String baseUrl = "https://api.sec-api.io";
 
-    public HttpResponse<String> getLatest10Q() throws URISyntaxException, IOException, InterruptedException {
+    public Latest10QResponse getLatest10Q() throws URISyntaxException, IOException, InterruptedException {
 
-        String requestBody = "{ \"query\": {\"query_string\": " +
-                "{\"query\": \"formType:'10-Q'\"}}, " +
-                "\"from\": \"0\"," +
-                "\"size\": \"10\"," +
-                "\"sort\": [ { \"filedAt\": { \"order\": \"desc\"}}]}";
+        ObjectMapper objectMapper = new ObjectMapper();
+        String queryString = "formType:\"10-Q\"";
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(baseUrl))
-                .header("Content-Type", "application/json")
-                .header("Authorization", apiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .build();
+            .uri(new URI(baseUrl))
+            .header("Content-Type", "application/json")
+            .header("Authorization", apiKey)
+            .POST(HttpRequest.BodyPublishers.ofString(buildQueryAPIRequestBody(queryString, "0", "10", "desc").toString()))
+            .build();
 
-        HttpResponse<String> response = HttpClient.newBuilder()
-                .build()
-                .send(request, HttpResponse.BodyHandlers.ofString());
-        return response;
+        String responseBody = HttpClient.newBuilder()
+            .build()
+            .send(request, HttpResponse.BodyHandlers.ofString()).body();
+
+        return objectMapper.readValue(responseBody, Latest10QResponse.class);
+    }
+
+    public Form4Response getForm4(String ticker) throws URISyntaxException, IOException, InterruptedException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String queryString = "ticker:" + ticker + " AND formType:4 AND formType:(NOT \"N-4\") AND formType:(NOT \"4/A\")";
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(new URI(baseUrl))
+            .header("Content-Type", "application/json")
+            .header("Authorization", apiKey)
+            .POST(HttpRequest.BodyPublishers.ofString(buildQueryAPIRequestBody(queryString, "0", "10", "desc").toString()))
+            .build();
+
+        String responseBody = HttpClient.newBuilder()
+            .build()
+            .send(request, HttpResponse.BodyHandlers.ofString()).body();
+        return objectMapper.readValue(responseBody, Form4Response.class);
+    }
+
+
+    private JsonObject buildQueryAPIRequestBody(String queryString, String from, String size, String sortOrder) {
+        return Json.createObjectBuilder()
+                .add("query", Json.createObjectBuilder()
+                        .add("query_string", Json.createObjectBuilder()
+                                .add("query", queryString)))
+                .add("from", from)
+                .add("size", size)
+                .add("sort", Json.createArrayBuilder()
+                        .add(Json.createObjectBuilder()
+                                .add("filedAt", Json.createObjectBuilder()
+                                        .add("order", sortOrder)))).build();
     }
 }
